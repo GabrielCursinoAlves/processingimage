@@ -1,0 +1,10 @@
+services:
+  broker:
+    image: rabbitmq:4-management
+    ports:
+      - "${PORT_AMQP}:${PORT_AMQP}" # PROTOCOL AMQP FOR RABBITMQ
+      - "${PORT_MANAGEMENT}:${PORT_MANAGEMENT}" # MANAGEMENT UI
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+volumes:
+  rabbitmq_data:
