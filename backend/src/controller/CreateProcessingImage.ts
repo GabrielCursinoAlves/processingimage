@@ -8,8 +8,8 @@ export default class CreateProcessingImage{
   const data = await req.uploadFile;
   const result = await this.storageServices?.saveUploadedFile(data);
  
-  const brokerClient = new BrokerClient();
-  brokerClient.sendProcessImageRequest('processImageQueue',result);
+  const broker = await BrokerClient.getInstance();
+  await broker.sendProcessImageRequest('processImageQueue',result);
   return reply.send(result);
  }
 }

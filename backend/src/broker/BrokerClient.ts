@@ -1,39 +1,48 @@
 import type { ProcessImageRequest } from '../interface/ProcessImageRequest.ts';
 import * as amqp from 'amqplib';
 
-let connection: amqp.Connection;
-let channel: amqp.Channel;
-
 export class BrokerClient {
+  private static instance: BrokerClient;
   private connection?: amqp.Connection;
+  private channel?: amqp.Channel;
 
-  async connect():Promise<amqp.Connection>{ 
-    if(!process.env.BROKER_URL) {
-      throw new Error('BROKER_URL must be defined');
+  static getInstance():BrokerClient{
+    if(!BrokerClient.instance) {
+      BrokerClient.instance = new BrokerClient();
     }
-    this.connection = await amqp.connect(process.env.BROKER_URL);
+    return BrokerClient.instance;
+  }
+
+  private async connect():Promise<amqp.Connection>{ 
+    if(!this.connection) {
+      if(!process.env.BROKER_URL) {
+        throw new Error('BROKER_URL must be defined');
+      }
+      this.connection = await amqp.connect(process.env.BROKER_URL);
+    }
     return this.connection;
   }
 
-  async channel():Promise<amqp.Channel>{
-    if(!this.connect()) {
-      throw new Error('Connection must be defined');
+  private async channels():Promise<amqp.Channel> {
+    if(!this.channel) {
+      const connection = await this.connect();
+      this.channel = await connection.createChannel();
     }
-    const channel = (await this.connect()).createChannel();
-    return channel;
+    return this.channel;
   };
 
-  async sendProcessImageRequest(quuen:string,message:ProcessImageRequest):Promise<void>{
+  public async sendProcessImageRequest(quuen:string,message:ProcessImageRequest):Promise<void>{
     if(!quuen){
       throw new Error('Queue name must be defined');
     }
-
-    const channel = await this.channel();
+    
+    const channel = await this.channels();
+   
     await channel.assertQueue(quuen, { durable: true });
     const sendMessage = await channel.sendToQueue(quuen, Buffer.from(JSON.stringify(message)));
-
+    
     if(!sendMessage) {
       throw new Error('Message could not be sent to the queue');
     }
-  }
+  } 
 }
