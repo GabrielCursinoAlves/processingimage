@@ -1,4 +1,4 @@
-import type { ProcessImageRequest } from '../interface/ProcessImageRequest.ts';
+import type { ProcessImageRequest } from '../app-producer/src/interface/ProcessImageRequest.ts';
 import * as amqp from 'amqplib';
 
 export class BrokerClient {
@@ -26,23 +26,35 @@ export class BrokerClient {
   private async channels():Promise<amqp.Channel> {
     if(!this.channel) {
       const connection = await this.connect();
-      this.channel = await connection.createChannel();
+      this.channel = await connection.createConfirmChannel()
     }
     return this.channel;
   };
 
-  public async sendProcessImageRequest(quuen:string,message:ProcessImageRequest):Promise<void>{
+  public async sendProcessImageRequest(queueId:string,quuen:string,message:ProcessImageRequest):Promise<object>{
     if(!quuen){
       throw new Error('Queue name must be defined');
     }
     
-    const channel = await this.channels();
-   
-    await channel.assertQueue(quuen, { durable: true });
-    const sendMessage = await channel.sendToQueue(quuen, Buffer.from(JSON.stringify(message)));
-    
-    if(!sendMessage) {
-      throw new Error('Message could not be sent to the queue');
+    try {
+      const channel = await this.channels();
+      await channel.assertQueue(quuen, { durable: true });
+      await channel.sendToQueue(
+        quuen, 
+        Buffer.from(JSON.stringify(message)),
+        {
+          persistent: true, 
+          correlationId: queueId
+        }
+      );
+
+      return {
+        image_id: queueId
+      };
+
+    } catch (error) {
+      throw new Error(`Failed to send message to queue: ${error}`);
     }
+  
   } 
 }
