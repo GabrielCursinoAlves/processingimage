@@ -33,7 +33,7 @@ export class BrokerClient {
 
   public async sendProcessImageRequest(queueId:string,quuen:string,message:ProcessImageRequest):Promise<object>{
     if(!quuen){
-      throw new Error('Queue name must be defined');
+      throw new Error('Queue name must be defined'); 
     }
     
     try {
