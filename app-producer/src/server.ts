@@ -14,7 +14,7 @@ app.setValidatorCompiler(validatorCompiler);
 app.setSerializerCompiler(serializerCompiler);
 
 app.register(CreateProcessingImageRouter);
- 
+
 app.listen({ port: Number(process.env.PORT) }).then(() => {
   console.log("Server is running on port 3304");
 });

@@ -1,7 +1,9 @@
-import type { ProcessImageRequest } from '../app-producer/src/interface/ProcessImageRequest.ts';
+import type { ProcessImageRequest } from '../interface/ProcessImageRequest.ts';
 import * as amqp from 'amqplib';
 
 export class BrokerClient {
+  private retryexchange?: amqp.Replies.AssertExchange;
+  private assertquue?: amqp.Replies.AssertQueue;
   private static instance: BrokerClient;
   private connection?: amqp.Connection;
   private channel?: amqp.Channel;
@@ -31,16 +33,24 @@ export class BrokerClient {
     return this.channel;
   };
 
-  public async sendProcessImageRequest(queueId:string,quuen:string,message:ProcessImageRequest):Promise<object>{
-    if(!quuen){
+  public async sendProcessImageRequest(queueId:string,queueName:string,message:ProcessImageRequest):Promise<object>{
+    if(!queueName){
       throw new Error('Queue name must be defined'); 
     }
     
     try {
       const channel = await this.channels();
-      await channel.assertQueue(quuen, { durable: true });
+      await channel.assertQueue(queueName, 
+        { 
+          durable: true,
+          arguments: {
+            'x-dead-letter-exchange': 'retry_exchange',
+            'x-dead-letter-routing-key': 'retry_queue'
+          } 
+        }
+      );
       await channel.sendToQueue(
-        quuen, 
+        queueName, 
         Buffer.from(JSON.stringify(message)),
         {
           persistent: true, 

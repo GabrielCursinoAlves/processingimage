@@ -1,0 +1,10 @@
+{
+    "extends": "@tsconfig/node22/tsconfig.json",
+    "compilerOptions": {
+       "module": "esnext",
+       "moduleResolution": "Node",
+       "typeRoots": ["./src/types", "./node_modules/@types"],
+       "noEmit": true,
+       "allowImportingTsExtensions": true
+    }
+}

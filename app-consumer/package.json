@@ -4,12 +4,21 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "npx tsx --env-file=.env --watch --no-warnings src/server.ts"
   },
   "keywords": [],
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "sharp": "^0.34.3"
+    "amqplib": "^0.10.8",
+    "fastify": "^5.5.0",
+    "sharp": "^0.34.3",
+    "typescript": "^5.9.2"
+  },
+  "devDependencies": {
+    "@tsconfig/node22": "^22.0.2",
+    "@types/amqplib": "^0.10.6",
+    "@types/node": "^24.2.0",
+    "tsx": "^4.20.3"
   }
 }

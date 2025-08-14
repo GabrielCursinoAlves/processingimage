@@ -1,6 +1,6 @@
 import { StorageService } from '../services/StorageService.ts';
 import type { FastifyRequest, FastifyReply } from 'fastify';
-import {BrokerClient} from "../../../broker/BrokerClient.ts"; 
+import {BrokerClient} from "../broker/BrokerClient.ts"; 
 
 export default class CreateProcessingImage{
  constructor(private storageServices: StorageService = new StorageService()) {}
