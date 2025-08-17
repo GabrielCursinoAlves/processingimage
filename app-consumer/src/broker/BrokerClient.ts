@@ -1,3 +1,6 @@
+import { error } from "console";
+import { channel } from "diagnostics_channel";
+import {ExchangeRetryParams, AssertQueueRetryParams, RetryConfirm} from "../interface/BrokerParams.ts";
 import * as amqp from 'amqplib';
 
 export class BrokerClient {
@@ -30,41 +33,55 @@ export class BrokerClient {
     return this.channel;
   };
 
-  private async exchange(exchangeName: string, channel: Channel):Promise<AssertExchangeReplies> {
-   
-    const retryexchange = await channel.assertExchange(exchangeName, 'direct', {
+  private async exchangeRetry(data: ExchangeRetryParams):Promise<AssertExchangeReplies> {
+    const {exchangeName, connectionChannel} = data;
+    
+    const exchangeRetry = await connectionChannel.assertExchange(exchangeName, 'direct', {
       durable: true,
-      arguments:{
-        'x-dead-letter-exchange': exchangeName,
-      }
     });
     
-    return retryexchange;
+    return exchangeRetry;
   };
 
-  private async assertQuue(retryQueueName: string, exchangeName: string, channel: Channel):Promise<AssertQueueReplies> {
-   
-    const assertquue = await channel.assertQueue(retryQueueName,{
+  private async assertQuueRetry(data:AssertQueueRetryParams):Promise<AssertQueueReplies> {
+    const {retryQueueName, exchangeName, queueName, connectionChannel} = data;
+
+    const assertquueRetry = await connectionChannel.assertQueue(retryQueueName,{
       durable: true,
       messageTtl: 5000,
       deadLetterExchange: exchangeName,
+      deadLetterRoutingKey: queueName
     });
     
-    return assertquue;
-  } 
+    return assertquueRetry;
+  }
+  
+  private async setupRetry(queueName:string,channel:Channel):Promise<void>{
+     const retryExhange = "retry_exchange"
+     const retryQueue = "retry_queue";
+
+     await this.exchangeRetry({
+        exchangeName: retryExhange, 
+        connectionChannel: channel
+      });
+      await this.assertQuueRetry({
+        retryQueueName: retryQueue,
+        exchangeName: retryExhange,
+        queueName,
+        connectionChannel: channel
+      });
+  }
 
   public async comsumerProcessImage(queueName:string):Promise<void>{ 
     if(!queueName){
       throw new Error("Queue name must be defined");
     }
-
+   
     try {
       const channel = await this.channels();
-      this.exchange('retry_exchange', channel);
-      this.assertQuue('retry_queue', 'retry_exchange', channel);
-      
-      await channel.assertQueue(queueName, 
-        { 
+      await this.setupRetry(queueName,channel);
+     
+      await channel.assertQueue(queueName, { 
           durable: true,
           arguments: {
             'x-dead-letter-exchange': 'retry_exchange',
@@ -72,22 +89,31 @@ export class BrokerClient {
           }
         }
       );
-
+      
       await channel.bindQueue(queueName, 'retry_exchange', queueName);
-
       await channel.consume(queueName, async message => {
         if(!message){
           return null;
         }
 
+        const attemptsxDeath = message.properties?.headers?.["x-death"] || [];
+        const attemptsMax = 3;
+
         try {
+          
           const content = message.content.toString();
           await this.processImage(content);
 
           channel.ack(message);
         } catch (error) {
+
+          if(attemptsxDeath.length < attemptsMax){
+            channel.nack(message, false, false);
+          }else{
+            channel.ack(message);
+          }
+
           console.error(`Error processing message: ${error}`);
-          channel.nack(message, false, false); 
         }
         
       },{ noAck: false });
@@ -98,7 +124,7 @@ export class BrokerClient {
   }
 
   private async processImage(data: string) {
-    console.log(JSON.stringify(data));
+    return {message:JSON.stringify(data)};
   }
   
 }

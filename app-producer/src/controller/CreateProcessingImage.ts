@@ -7,9 +7,13 @@ export default class CreateProcessingImage{
  Handle = async (req:FastifyRequest, reply:FastifyReply): Promise<void> => {
   const data = await req.uploadFile;
   const result = await this.storageServices?.saveUploadedFile(data);
-  
+
   const broker = await BrokerClient.getInstance();
-  const resultbroker = await broker.sendProcessImageRequest(result.image_id,'processImageQueue',result);
+  const resultbroker = await broker.sendProcessImageRequest({
+    queueId: result.image_id,
+    queueName:'processImageQueue',
+    message:result
+  });
   return reply.send(resultbroker);
  }
 }

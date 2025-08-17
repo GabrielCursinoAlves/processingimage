@@ -1,9 +1,7 @@
-import type { ProcessImageRequest } from '../interface/ProcessImageRequest.ts';
+import type { BrokerParams } from '../interface/BrokerParams.ts';
 import * as amqp from 'amqplib';
 
 export class BrokerClient {
-  private retryexchange?: amqp.Replies.AssertExchange;
-  private assertquue?: amqp.Replies.AssertQueue;
   private static instance: BrokerClient;
   private connection?: amqp.Connection;
   private channel?: amqp.Channel;
@@ -15,7 +13,7 @@ export class BrokerClient {
     return BrokerClient.instance;
   }
 
-  private async connect():Promise<amqp.Connection>{ 
+  private async connect():Promise<Connection>{ 
     if(!this.connection) {
       if(!process.env.BROKER_URL) {
         throw new Error('BROKER_URL must be defined');
@@ -25,7 +23,7 @@ export class BrokerClient {
     return this.connection;
   }
 
-  private async channels():Promise<amqp.Channel> {
+  private async channels():Promise<Channel> {
     if(!this.channel) {
       const connection = await this.connect();
       this.channel = await connection.createConfirmChannel()
@@ -33,7 +31,9 @@ export class BrokerClient {
     return this.channel;
   };
 
-  public async sendProcessImageRequest(queueId:string,queueName:string,message:ProcessImageRequest):Promise<object>{
+  public async sendProcessImageRequest(data:BrokerParams):Promise<object>{
+    const { queueId, queueName, message } = data;
+  
     if(!queueName){
       throw new Error('Queue name must be defined'); 
     }
