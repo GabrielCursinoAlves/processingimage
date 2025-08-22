@@ -1,6 +1,5 @@
-import { error } from "console";
-import { channel } from "diagnostics_channel";
-import {ExchangeRetryParams, AssertQueueRetryParams, RetryConfirm} from "../interface/BrokerParams.ts";
+import {ExchangeRetryParams, AssertQueueRetryParams} from "../interface/BrokerParams.ts";
+import {UploadParams} from "../interface/UploadParams.ts";
 import * as amqp from 'amqplib';
 
 export class BrokerClient {
@@ -48,7 +47,7 @@ export class BrokerClient {
 
     const assertquueRetry = await connectionChannel.assertQueue(retryQueueName,{
       durable: true,
-      messageTtl: 5000,
+      messageTtl: 30000, 
       deadLetterExchange: exchangeName,
       deadLetterRoutingKey: queueName
     });
@@ -72,14 +71,16 @@ export class BrokerClient {
       });
   }
 
-  public async comsumerProcessImage(queueName:string):Promise<void>{ 
+  public async comsumerProcessImage(queueName:string):Promise<UploadParams>{ 
     if(!queueName){
       throw new Error("Queue name must be defined");
     }
-   
+    
     try {
       const channel = await this.channels();
       await this.setupRetry(queueName,channel);
+
+      await channel.bindQueue('retry_queue', 'retry_exchange', 'retry_queue');
      
       await channel.assertQueue(queueName, { 
           durable: true,
@@ -89,42 +90,53 @@ export class BrokerClient {
           }
         }
       );
-      
+     
       await channel.bindQueue(queueName, 'retry_exchange', queueName);
-      await channel.consume(queueName, async message => {
-        if(!message){
-          return null;
-        }
-
-        const attemptsxDeath = message.properties?.headers?.["x-death"] || [];
-        const attemptsMax = 3;
-
-        try {
-          
-          const content = message.content.toString();
-          await this.processImage(content);
-
-          channel.ack(message);
-        } catch (error) {
-
-          if(attemptsxDeath.length < attemptsMax){
-            channel.nack(message, false, false);
-          }else{
-            channel.ack(message);
+      
+      return new Promise<UploadParams>((resolve, reject) => {
+    
+        channel.consume(queueName, async message => {
+          if(!message){
+            return reject(new Error("Message is null"));
           }
-
-          console.error(`Error processing message: ${error}`);
-        }
         
-      },{ noAck: false });
+          const attemptsxDeath = message.properties?.headers?.["x-death"] || [];
+          const attemptsMax = 3;
+
+          try {
+            
+            const content = message.content.toString();
+            channel.ack(message);
+            
+            resolve(JSON.parse(content));
+            
+          } catch (error) {
+
+            if(attemptsxDeath.length < attemptsMax - 1){
+              channel.nack(message, false, false);
+            }else{
+              channel.ack(message);
+            }
+
+            console.error(`Error processing message: ${error}`);
+          }
+          
+        },{ noAck: false });
+      });
       
     } catch (error) {
        throw new Error(`Failed to send message to queue: ${error}`);
     }
   }
 
-  private async processImage(data: string) {
-    return {message:JSON.stringify(data)};
+  private processImage(data: string):UploadParams{
+    const {image_id, file_path, original_filename} = JSON.parse(data);
+
+    return {
+      image_id,
+      file_path,
+      original_filename
+    };
   }
   
 }

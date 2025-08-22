@@ -1,4 +1,4 @@
-import type {ProcessImageRequest} from "../interface/ProcessImageRequest.ts";
+import type {UploadParams} from "../interface/UploadParams.ts";
 import type {MultipartFile} from '@fastify/multipart';
 import { fileURLToPath } from 'url';
 import path from 'node:path';
@@ -7,7 +7,7 @@ import fs from 'node:fs';
 
 export class StorageService{
   constructor(private __dirname = path.dirname(fileURLToPath(import.meta.url))) {}
-  async saveUploadedFile(file: MultipartFile): Promise<ProcessImageRequest> {
+  async saveUploadedFile(file: MultipartFile): Promise<UploadParams> {
    
     const fileId = crypto.randomBytes(16).toString('hex'); 
     const fileName = `${fileId}${path.extname(file.filename)}`;
@@ -22,10 +22,10 @@ export class StorageService{
    await fs.writeFileSync(fileUpload, buffer);
 
    return {
-    image_id: fileId, 
-    file_path: fileUpload,
-    original_filename: file.filename,
-   };
+      image_id: fileId, 
+      file_path: fileUpload,
+      original_filename: file.filename,
+    };
 
   }
 }

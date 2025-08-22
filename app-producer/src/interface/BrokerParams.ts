@@ -5,5 +5,5 @@ export interface BrokerParams{
     image_id: string,
     file_path: string,
     original_filename: string
-  }
+  },
 }

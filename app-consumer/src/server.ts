@@ -1,11 +1,18 @@
-import fastify from "fastify";
+import {SharpService} from "./services/SharpService.ts";
 import {BrokerClient} from "./broker/BrokerClient.ts";
-
+import fastify from "fastify";
+import sharp from "sharp";
 
 const app = fastify();
-const broker = BrokerClient.getInstance();
 
-broker.comsumerProcessImage("processImageQueue");
+async function bootstrap(){
+  const broker = BrokerClient.getInstance();
+  const result = await broker.comsumerProcessImage("processImageQueue");
+  console.log(result);
+
+}
+
+bootstrap();
 
 app.listen({port: Number(process.env.PORT)}).then(() => {
   console.log("Server is running on port 3305");

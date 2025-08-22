@@ -8,10 +8,4 @@ export interface AssertQueueRetryParams{
   exchangeName: string,
   queueName: string,
   connectionChannel: Channel,
-  
-}
-
-export interface RetryConfirm{
-  message: ConsumeMessage,
-  connectionChannel: Channel
 }

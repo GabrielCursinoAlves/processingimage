@@ -5,15 +5,18 @@ import {
   type ZodTypeProvider
 }
 from 'fastify-type-provider-zod';  
- 
+import {ErrorHandler} from "./ErrorHandler.ts";
+
 import { CreateProcessingImageRouter } from './routers/CreateProcessingImageRouter.ts';
 
-const app = fastify().withTypeProvider<ZodTypeProvider>();
+const app = fastify({logger: true}).withTypeProvider<ZodTypeProvider>();
 
 app.setValidatorCompiler(validatorCompiler);
 app.setSerializerCompiler(serializerCompiler);
 
 app.register(CreateProcessingImageRouter);
+
+app.setErrorHandler(ErrorHandler);
 
 app.listen({ port: Number(process.env.PORT) }).then(() => {
   console.log("Server is running on port 3304");

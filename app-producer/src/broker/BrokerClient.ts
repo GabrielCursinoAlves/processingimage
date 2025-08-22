@@ -1,3 +1,4 @@
+import {AppError, NotFoundError} from "../lib/middlewares/AppErrorMiddleware.ts";
 import type { BrokerParams } from '../interface/BrokerParams.ts';
 import * as amqp from 'amqplib';
 
@@ -16,7 +17,7 @@ export class BrokerClient {
   private async connect():Promise<Connection>{ 
     if(!this.connection) {
       if(!process.env.BROKER_URL) {
-        throw new Error('BROKER_URL must be defined');
+        throw new NotFoundError('BROKER_URL must be defined');
       }
       this.connection = await amqp.connect(process.env.BROKER_URL);
     }
@@ -35,7 +36,7 @@ export class BrokerClient {
     const { queueId, queueName, message } = data;
   
     if(!queueName){
-      throw new Error('Queue name must be defined'); 
+      throw new NotFoundError('Queue name must be defined');
     }
     
     try {
@@ -49,6 +50,7 @@ export class BrokerClient {
           } 
         }
       );
+
       await channel.sendToQueue(
         queueName, 
         Buffer.from(JSON.stringify(message)),
@@ -63,7 +65,7 @@ export class BrokerClient {
       };
 
     } catch (error) {
-      throw new Error(`Failed to send message to queue: ${error}`);
+      throw new AppError(`Failed to send message to queue: ${error}`, 500);
     }
   
   } 

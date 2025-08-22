@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
+  "type": "module",
   "scripts": {
     "dev": "npx tsx --env-file=.env --watch --no-warnings src/server.ts"
   },
