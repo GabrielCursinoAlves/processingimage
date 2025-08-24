@@ -1,4 +1,4 @@
 node_modules/ 
-app-producer/uploads/*
+/uploads/*
 .env 
-!app-producer/uploads/.gitkeep
+!/uploads/.gitkeep
