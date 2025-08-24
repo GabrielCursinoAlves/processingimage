@@ -8,12 +8,12 @@ import fs from 'node:fs';
 export class StorageService{
   constructor(private __dirname = path.dirname(fileURLToPath(import.meta.url))) {}
   async saveUploadedFile(file: MultipartFile): Promise<UploadParams> {
-   
+    
     const fileId = crypto.randomBytes(16).toString('hex'); 
     const fileName = `${fileId}${path.extname(file.filename)}`;
 
-    const fileDir = path.join(this.__dirname, '../../uploads');
-    const fileUpload = path.join(this.__dirname, '../../uploads', fileName);
+    const fileDir = path.join(this.__dirname, '../../../uploads');
+    const fileUpload = path.join(this.__dirname, '../../../uploads', fileName);
 
     if(!fs.existsSync(fileDir)) {
       fs.mkdirSync(fileDir, { recursive: true });
@@ -24,6 +24,7 @@ export class StorageService{
    return {
       image_id: fileId, 
       file_path: fileUpload,
+      mimetype: file.mimetype,
       original_filename: file.filename,
     };
 

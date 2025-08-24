@@ -1,4 +1,5 @@
 import {ExchangeRetryParams, AssertQueueRetryParams} from "../interface/BrokerParams.ts";
+import {AppError,NotFoundError} from "../lib/middlewares/AppErrorMiddleware.ts";
 import {UploadParams} from "../interface/UploadParams.ts";
 import * as amqp from 'amqplib';
 
@@ -17,7 +18,7 @@ export class BrokerClient {
   private async connect():Promise<Connection>{ 
     if(!this.connection) {
       if(!process.env.BROKER_URL) {
-        throw new Error('BROKER_URL must be defined');
+        throw new NotFoundError('BROKER_URL must be defined');
       }
       this.connection = await amqp.connect(process.env.BROKER_URL);
     }
@@ -73,7 +74,7 @@ export class BrokerClient {
 
   public async comsumerProcessImage(queueName:string):Promise<UploadParams>{ 
     if(!queueName){
-      throw new Error("Queue name must be defined");
+      throw new NotFoundError("Queue name must be defined");
     }
     
     try {
@@ -117,26 +118,16 @@ export class BrokerClient {
             }else{
               channel.ack(message);
             }
-
-            console.error(`Error processing message: ${error}`);
+            
+            throw new AppError(`Error processing message: ${error}`,500);
           }
           
         },{ noAck: false });
       });
       
     } catch (error) {
-       throw new Error(`Failed to send message to queue: ${error}`);
+       throw new AppError(`Failed to send message to queue: ${error}`,500);
     }
-  }
-
-  private processImage(data: string):UploadParams{
-    const {image_id, file_path, original_filename} = JSON.parse(data);
-
-    return {
-      image_id,
-      file_path,
-      original_filename
-    };
   }
   
 }

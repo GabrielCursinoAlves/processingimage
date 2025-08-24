@@ -6,6 +6,6 @@ import fastifyMultipart from '@fastify/multipart';
 
 export const CreateProcessingImageRouter:FastifyPluginAsyncZod = async (app) => {
   await app.register(fastifyMultipart,{limits: MultipartConfig});
-  app.post("/createProcessingImage",{preHandler: [UploadMiddleware]}, new ControllerImage.CreateProcessingImage().Handle);
+  app.post("/createProcessingImage",{preHandler: [UploadMiddleware]}, new ControllerImage.CreateProcessingImage().handle);
 };
   
