@@ -24,7 +24,7 @@ export class StorageService{
    return {
       image_id: fileId, 
       file_path: fileUpload,
-      mimetype: file.mimetype,
+      mime_type: file.mimetype,
       original_filename: file.filename,
     };
 

@@ -4,7 +4,7 @@ export interface BrokerParams{
   message: {
     image_id: string,
     file_path: string,
-    mimetype: string,
+    mime_type: string,
     original_filename: string
   },
 }

@@ -1,9 +1,10 @@
 import { StorageService } from '../services/StorageService.ts';
+import { ProcessedImage } from '../db/schema/ProcessedImage.ts';
 import type { FastifyRequest, FastifyReply } from 'fastify';
-import {BrokerClient} from "../broker/BrokerClient.ts"; 
+import {BrokerClient} from "../broker/BrokerClient.ts";  
 
 export default class CreateProcessingImage{
- constructor(private storageServices: StorageService = new StorageService()) {}
+ constructor(private storageServices: StorageService = new StorageService(), private processedImage: ProcessedImage = new ProcessedImage()) {}
  handle = async (req:FastifyRequest, reply:FastifyReply): Promise<void> => {
     const data = await req.uploadFile;
     const result = await this.storageServices?.saveUploadedFile(data);
@@ -14,6 +15,16 @@ export default class CreateProcessingImage{
       queueName:'processImageQueue',
       message:result
     });
+   
+    if(resultbroker){
+      const {image_id, file_path, mime_type} = result;
+      this.processedImage.save({
+        image_id,
+        file_path,
+        mime_type
+      });
+    }
+
     return reply.send(resultbroker);
  }
 }
