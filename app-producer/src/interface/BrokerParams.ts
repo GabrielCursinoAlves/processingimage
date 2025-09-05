@@ -6,5 +6,10 @@ export interface BrokerParams{
     file_path: string,
     mime_type: string,
     original_filename: string
-  },
+  }
+}
+
+export interface BrokerReceiveParams{
+  status: string
+  error_reason: string
 }

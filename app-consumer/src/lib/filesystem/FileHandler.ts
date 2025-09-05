@@ -11,7 +11,7 @@ import fs from 'fs';
 export class FileHandler{
   constructor(private __dirname = path.dirname(fileURLToPath(import.meta.url))) {}
   validateFile(data:UploadParams):boolean {
-    const {file_path, mimetype} = data;
+    const {file_path, mime_type} = data;
 
     const fileName = path.join(file_path);
     
@@ -19,7 +19,7 @@ export class FileHandler{
       throw new NotFoundError("File not found");
     }
 
-    if(!AllTypesMultipart.includes(mimetype)) {
+    if(!AllTypesMultipart.includes(mime_type)) {
       throw new UnsupportedMediaTypeError("Unsupported file type");
     }
     

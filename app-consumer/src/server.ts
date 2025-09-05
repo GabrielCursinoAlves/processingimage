@@ -7,10 +7,12 @@ const app = fastify({logger: true});
 async function bootstrap(){
   const broker = BrokerClient.getInstance();
   const result = await broker.comsumerProcessImage("processImageQueue");
-
-  const sharpService = new SharpService();
-  sharpService.handle(result); 
-
+  
+  if(result){ 
+  
+    const sharpService = new SharpService();
+    const subFile = sharpService.handle(result); 
+  }
 }
 
 bootstrap();

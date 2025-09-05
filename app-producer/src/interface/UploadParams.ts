@@ -5,7 +5,7 @@ export interface UploadParams{
   original_filename: string
 }
 
-export interface ProcessedParams{
+export interface ProcessedImageParams{
   image_id: string,
   file_path: string,
   mime_type: string,

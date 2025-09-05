@@ -126,7 +126,7 @@ export class BrokerClient {
       });
       
     } catch (error) {
-       throw new AppError(`Failed to send message to queue: ${error}`,500);
+       throw new AppError(`Failed to send message to queue: ${error}`, 500);
     }
   }
   

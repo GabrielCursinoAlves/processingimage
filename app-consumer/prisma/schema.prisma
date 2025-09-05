@@ -1,0 +1,15 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Processed_images {
+  id                  String   @id @default(uuid())
+  image_processing_id String   @unique
+  processed_file_path String
+  createdAt           DateTime @default(now())
+}

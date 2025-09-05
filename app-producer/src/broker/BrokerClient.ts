@@ -1,6 +1,10 @@
 import {AppError, NotFoundError} from "../lib/middlewares/AppErrorMiddleware.ts";
-import type { BrokerParams } from '../interface/BrokerParams.ts';
+import type { BrokerParams, BrokerReceiveParams } from '../interface/BrokerParams.ts';
 import * as amqp from 'amqplib';
+import { resolve } from "node:path";
+import { rejects } from "node:assert";
+import { channel } from "node:diagnostics_channel";
+import { string } from "zod";
 
 export class BrokerClient {
   private static instance: BrokerClient;
@@ -32,7 +36,45 @@ export class BrokerClient {
     return this.channel;
   };
 
-  public async sendProcessImageRequest(data:BrokerParams):Promise<object>{
+  public async processedReceiveQueue(queueName:string):Promise<BrokerReceiveParams>{
+    if(!queueName){
+      throw new NotFoundError('Queue name must be defined');
+    }
+
+    try {
+
+      const channel = await this.channels();
+      await channel.assertQueue(queueName, {durable: true});
+
+      return new Promise<BrokerReceiveParams>((resolve, reject) => {
+
+        channel.consume(queueName, async message => {
+          if(!message){
+            return reject(new Error("Message is null"));
+          }
+
+          try {
+            
+            const content = message.content.toString();
+            channel.ack(message);
+              
+            resolve(JSON.parse(content));
+
+          } catch (error) {
+            throw new AppError(`Error processing message: ${error}`,500);
+          }
+
+        },{ noAck: false });
+
+      });
+
+    } catch (error) {
+       throw new AppError(`Failed to send message to queue: ${error}`, 500);
+    }
+    
+  }
+
+  public async sendProcessImageRequest(data:BrokerParams):Promise<{image_id: string}>{
     const { queueId, queueName, message } = data;
   
     if(!queueName){
