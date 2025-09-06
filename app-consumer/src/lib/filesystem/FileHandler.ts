@@ -12,7 +12,7 @@ export class FileHandler{
   constructor(private __dirname = path.dirname(fileURLToPath(import.meta.url))) {}
   validateFile(data:UploadParams):boolean {
     const {file_path, mime_type} = data;
-
+   
     const fileName = path.join(file_path);
     
     if(!fs.existsSync(fileName)) {

@@ -1,5 +1,5 @@
-import { StorageService } from '../services/StorageService.ts';
 import { ProcessedImage } from '../db/schema/ProcessedImage.ts';
+import { StorageService } from '../services/StorageService.ts';
 import type { FastifyRequest, FastifyReply } from 'fastify';
 import {BrokerClient} from "../broker/BrokerClient.ts";  
 

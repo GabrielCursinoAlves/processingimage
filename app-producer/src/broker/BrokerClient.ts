@@ -1,10 +1,7 @@
 import {AppError, NotFoundError} from "../lib/middlewares/AppErrorMiddleware.ts";
-import type { BrokerParams, BrokerReceiveParams } from '../interface/BrokerParams.ts';
+import type { BrokerParams } from '../interface/BrokerParams.ts';
+import { ProcessedImage } from '../db/schema/ProcessedImage.ts';
 import * as amqp from 'amqplib';
-import { resolve } from "node:path";
-import { rejects } from "node:assert";
-import { channel } from "node:diagnostics_channel";
-import { string } from "zod";
 
 export class BrokerClient {
   private static instance: BrokerClient;
@@ -36,43 +33,38 @@ export class BrokerClient {
     return this.channel;
   };
 
-  public async processedReceiveQueue(queueName:string):Promise<BrokerReceiveParams>{
+  public async processedReceiveQueue(queueName:string):Promise<void>{
     if(!queueName){
       throw new NotFoundError('Queue name must be defined');
     }
 
     try {
-
       const channel = await this.channels();
       await channel.assertQueue(queueName, {durable: true});
 
-      return new Promise<BrokerReceiveParams>((resolve, reject) => {
+      await channel.consume(queueName, async message => {
+        if(!message){
+          throw new NotFoundError("Message is null");
+        }
 
-        channel.consume(queueName, async message => {
-          if(!message){
-            return reject(new Error("Message is null"));
-          }
+        try {    
+          const content = JSON.parse(message.content.toString());
+          const processedImage = new ProcessedImage();
+          await processedImage.update(content);
 
-          try {
-            
-            const content = message.content.toString();
-            channel.ack(message);
+          channel.ack(message);
               
-            resolve(JSON.parse(content));
+        } catch (error) {
+          throw new AppError(`Error processing message: ${error}`,500);
+        }
 
-          } catch (error) {
-            throw new AppError(`Error processing message: ${error}`,500);
-          }
-
-        },{ noAck: false });
-
-      });
+      },{ noAck: false });
 
     } catch (error) {
        throw new AppError(`Failed to send message to queue: ${error}`, 500);
     }
     
-  }
+  } 
 
   public async sendProcessImageRequest(data:BrokerParams):Promise<{image_id: string}>{
     const { queueId, queueName, message } = data;

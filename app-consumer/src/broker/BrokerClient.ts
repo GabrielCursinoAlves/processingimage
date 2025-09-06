@@ -2,6 +2,7 @@ import {ExchangeRetryParams, AssertQueueRetryParams} from "../interface/BrokerPa
 import {AppError,NotFoundError} from "../lib/middlewares/AppErrorMiddleware.ts";
 import {UploadParams} from "../interface/UploadParams.ts";
 import * as amqp from 'amqplib';
+import { ImageProcessingService } from "../services/ImageProcessingService.ts";
 
 export class BrokerClient {
   private static instance: BrokerClient;
@@ -72,7 +73,7 @@ export class BrokerClient {
       });
   }
 
-  public async comsumerProcessImage(queueName:string):Promise<UploadParams>{ 
+  public async comsumerProcessImage(queueName:string):Promise<void>{ 
     if(!queueName){
       throw new NotFoundError("Queue name must be defined");
     }
@@ -80,7 +81,6 @@ export class BrokerClient {
     try {
       const channel = await this.channels();
       await this.setupRetry(queueName,channel);
-
       await channel.bindQueue('retry_queue', 'retry_exchange', 'retry_queue');
      
       await channel.assertQueue(queueName, { 
@@ -91,40 +91,48 @@ export class BrokerClient {
           }
         }
       );
-     
       await channel.bindQueue(queueName, 'retry_exchange', queueName);
       
-      return new Promise<UploadParams>((resolve, reject) => {
-    
-        channel.consume(queueName, async message => {
-          if(!message){
-            return reject(new Error("Message is null"));
-          }
+      await channel.consume(queueName, async message => {
+        if(!message){
+          throw new NotFoundError("Message is null");
+        }
         
-          const attemptsxDeath = message.properties?.headers?.["x-death"] || [];
-          const attemptsMax = 3;
+        const imageProcessingService = new ImageProcessingService();
+        const attemptsxDeath = message.properties?.headers?.["x-death"] || [];
+        const attemptsMax = 3;
 
-          try {
+        try {
+          const content = JSON.parse(message.content.toString());
+          await channel.publish('', 'producer_callback_queue', Buffer.from(JSON.stringify({
+            id: content.image_id,
+            status: 'completed'
+          })));
+          await imageProcessingService.handle({
+            image_id: content.image_id,
+            file_path: content.file_path,
+            mime_type: content.mime_type
+          });
+          channel.ack(message);
             
-            const content = message.content.toString();
+        } catch (error) {
+
+          if(attemptsxDeath.length < attemptsMax - 1){
+            channel.nack(message, false, false);
+            await channel.publish('', 'producer_callback_queue', Buffer.from(JSON.stringify({
+              id: JSON.parse(message.content.toString()).image_id,
+              status: 'failed',
+              error_reason: error
+            })));
+          }else{
             channel.ack(message);
-            
-            resolve(JSON.parse(content));
-            
-          } catch (error) {
-
-            if(attemptsxDeath.length < attemptsMax - 1){
-              channel.nack(message, false, false);
-            }else{
-              channel.ack(message);
-            }
-            
-            throw new AppError(`Error processing message: ${error}`,500);
           }
+            
+          throw new AppError(`Error processing message: ${error}`, 500);
+        }
           
-        },{ noAck: false });
-      });
-      
+      },{ noAck: false });
+     
     } catch (error) {
        throw new AppError(`Failed to send message to queue: ${error}`, 500);
     }

@@ -1,5 +1,5 @@
 import {NotFoundError} from "../../lib/middlewares/AppErrorMiddleware.ts";
-import { ProcessedImageParams } from "../../interface/UploadParams.ts";
+import { ProcessedImageParams, ProcessedReceiveParams } from "../../interface/UploadParams.ts";
 import { prisma } from "../../config/prisma/connection.ts";
 
 export class ProcessedImage {
@@ -13,7 +13,7 @@ export class ProcessedImage {
     if(processedExist){
       throw new NotFoundError('Processed image already exists');
     }
-
+   
     await prisma.processedImage.create({
       data: {
         id,
@@ -21,6 +21,25 @@ export class ProcessedImage {
         mime_type,
       }
     });
+  }
+
+  async update(data:ProcessedReceiveParams):Promise<void>{
+    const {id, status, error_reason} = data; 
+   
+    const processedExist = await prisma.processedImage.findUnique({
+      where: { id }
+    });
+    
+    console.log(id);
+    if(processedExist){
+      await prisma.processedImage.update({
+        where:{ id },
+        data:{
+          status,
+          error_reason
+        }
+      });
+    }
 
   }
 }

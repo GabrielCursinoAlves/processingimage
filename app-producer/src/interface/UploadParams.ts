@@ -11,3 +11,9 @@ export interface ProcessedImageParams{
   mime_type: string,
   status?: string
 }
+
+export interface ProcessedReceiveParams{
+  id: string
+  status: string
+  error_reason: string
+}

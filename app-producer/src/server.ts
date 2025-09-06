@@ -15,7 +15,6 @@ const app = fastify({logger: true}).withTypeProvider<ZodTypeProvider>();
 async function bootstrap(){
   const broker = BrokerClient.getInstance();
   const result = await broker.processedReceiveQueue("producer_callback_queue");
-  console.log(result);
 }
 
 bootstrap();

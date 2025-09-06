@@ -8,9 +8,3 @@ export interface BrokerParams{
     original_filename: string
   }
 }
-
-export interface BrokerReceiveParams{
-  id: string
-  status: string
-  error_reason: string
-}
