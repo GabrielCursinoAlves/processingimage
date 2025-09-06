@@ -10,6 +10,7 @@ export interface BrokerParams{
 }
 
 export interface BrokerReceiveParams{
+  id: string
   status: string
   error_reason: string
 }
