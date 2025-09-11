@@ -1,8 +1,10 @@
+import {ProcessedPublishParams, ProcessedConfirmParams, UploadParams} from "../interface/UploadParams.ts";
 import {ExchangeRetryParams, AssertQueueRetryParams} from "../interface/BrokerParams.ts";
 import {AppError,NotFoundError} from "../lib/middlewares/AppErrorMiddleware.ts";
-import {UploadParams} from "../interface/UploadParams.ts";
-import * as amqp from 'amqplib';
 import { ImageProcessingService } from "../services/ImageProcessingService.ts";
+import * as amqp from 'amqplib';
+import { error } from "console";
+import { channel } from "diagnostics_channel";
 
 export class BrokerClient {
   private static instance: BrokerClient;
@@ -73,6 +75,32 @@ export class BrokerClient {
       });
   }
 
+  private processedPublish(data:ProcessedPublishParams, confirm: ProcessedConfirmParams, channel:Channel):void{
+    const contentFormat = Array.isArray(data) ? data : [data];
+
+    for(const file of contentFormat){
+      channel.publish('', 'producer_callback_queue', Buffer.from(
+      JSON.stringify({
+        id: file.id, 
+        image_id: file.image_id, 
+        status: confirm.status, 
+        error_reason: confirm.error_reason}
+      )));
+    }
+  }
+
+  private async processedImages(imageProcessingService:ImageProcessingService, data:UploadParams):Promise<void>{
+    const contentFormat = Array.isArray(data) ? data : [data];
+
+    for(const file of contentFormat){
+      await imageProcessingService.handle({
+        image_id: file.image_id,
+        file_path: file.file_path,
+        mime_type: file.mime_type
+    });
+    }
+  }
+
   public async comsumerProcessImage(queueName:string):Promise<void>{ 
     if(!queueName){
       throw new NotFoundError("Queue name must be defined");
@@ -102,33 +130,28 @@ export class BrokerClient {
         const attemptsxDeath = message.properties?.headers?.["x-death"] || [];
         const attemptsMax = 3;
 
+        const content = JSON.parse(message.content.toString());
+       
         try {
-          const content = JSON.parse(message.content.toString());
-          await channel.publish('', 'producer_callback_queue', Buffer.from(JSON.stringify({
-            id: content.image_id,
-            status: 'completed'
-          })));
-          await imageProcessingService.handle({
-            image_id: content.image_id,
-            file_path: content.file_path,
-            mime_type: content.mime_type
-          });
-          channel.ack(message);
-            
-        } catch (error) {
 
+          this.processedPublish(content, {status: 'completed'}, channel);
+          await this.processedImages(imageProcessingService,content);
+
+          channel.ack(message);
+           
+        } catch (error) {
+         
           if(attemptsxDeath.length < attemptsMax - 1){
+            
+            if (error instanceof AppError) {
+              this.processedPublish(content, {status: 'failed', error_reason: error.message}, channel);
+            }
             channel.nack(message, false, false);
-            await channel.publish('', 'producer_callback_queue', Buffer.from(JSON.stringify({
-              id: JSON.parse(message.content.toString()).image_id,
-              status: 'failed',
-              error_reason: error
-            })));
+
           }else{
             channel.ack(message);
           }
             
-          throw new AppError(`Error processing message: ${error}`, 500);
         }
           
       },{ noAck: false });

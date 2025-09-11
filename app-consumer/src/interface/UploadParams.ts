@@ -9,3 +9,13 @@ export interface ProcessedsImages{
   image_processing_id: string,
   processed_file_path: string
 }
+
+export interface ProcessedPublishParams{
+  id: string,
+  image_id: string
+}
+
+export interface ProcessedConfirmParams{
+  status: 'completed' | 'failed',
+  error_reason?: string
+}

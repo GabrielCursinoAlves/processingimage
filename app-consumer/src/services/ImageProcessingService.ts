@@ -7,15 +7,16 @@ export class ImageProcessingService{
   constructor(private sharpService: SharpService = new SharpService()){}
   async handle(data:UploadParams):Promise<void>{
     const result = await this.sharpService.handle(data);
-    
-    if(!result.image_processing_id){
+    const {image_processing_id, processed_file_path} = result;
+
+    if(!image_processing_id){
        throw new NotFoundError("processed image id not defined");
     }
 
     const processedImages = new ProcessedImages();
     await processedImages.save({
-      image_processing_id: result.image_processing_id,
-      processed_file_path: result.processed_file_path
+      image_processing_id, 
+      processed_file_path
     });
   }
 }

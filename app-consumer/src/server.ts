@@ -2,11 +2,12 @@ import {SharpService} from "./services/SharpService.ts";
 import {BrokerClient} from "./broker/BrokerClient.ts";
 import fastify from "fastify";
 
-const app = fastify({logger: true});
+const app = fastify();
 
 async function bootstrap(){
   const broker = BrokerClient.getInstance();
-  await broker.comsumerProcessImage("processImageQueue");
+ await broker.comsumerProcessImage("processImageQueue");
+
 }
 
 bootstrap();
