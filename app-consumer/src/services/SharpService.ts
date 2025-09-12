@@ -1,16 +1,15 @@
 import {AppError, BadRequestError, NotFoundError} from "../lib/middlewares/AppErrorMiddleware.ts";
 import { ProcessedsImages, UploadParams } from '../interface/UploadParams.ts';
 import {FileHandler} from "../lib/filesystem/FileHandler.ts";
-import crpyto from 'crypto';
+import crypto from 'crypto';
 import sharp from 'sharp';
 import path from 'path';
 
 export class SharpService {
   constructor(private fileHandler = new FileHandler()) {}
   async handle(data: UploadParams):Promise<ProcessedsImages> {
-    const {image_id: image_processing_id, file_path, mime_type} = data;
-
-    if(!image_processing_id){
+    const {id, image_id, file_path, mime_type} = data;
+    if(!image_id){
       throw new NotFoundError("processed image id not defined");
     }
 
@@ -19,13 +18,13 @@ export class SharpService {
     }
 
     const pathFile = file_path.split('\\');
-    const pathSubDirectory = pathFile[pathFile.length -1].replace(/\.[^/.]+$/, "");
-    const subDirectory = this.fileHandler.createDirExists(pathSubDirectory);
-      
+    const subDirectory = this.fileHandler.createDirExists(id);
+  
     try {
-      const fileId = crpyto.randomBytes(10).toString('hex');
+
+      const fileId = crypto.randomBytes(10).toString('hex');
       const fileName = `${fileId}.${pathFile[pathFile.length -1].split('.').pop()}`;
-      
+
       const processed_file_path = `${subDirectory}${path.sep}resized_${fileName}`;
       
       await sharp(file_path)
@@ -35,9 +34,9 @@ export class SharpService {
         gravity: 'southeast',
       }])
       .toFile(processed_file_path);
-
+      
       return {
-        image_processing_id,
+        image_processing_id: image_id,
         processed_file_path
       }
 

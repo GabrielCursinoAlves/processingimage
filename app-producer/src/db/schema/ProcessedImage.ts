@@ -1,45 +1,51 @@
-import {NotFoundError} from "../../lib/middlewares/AppErrorMiddleware.ts";
 import { ProcessedImageParams, ProcessedReceiveParams } from "../../interface/UploadParams.ts";
+import {AppError} from "../../lib/middlewares/AppErrorMiddleware.ts";
 import { prisma } from "../../config/prisma/connection.ts";
 
 export class ProcessedImage {
-  async save(data:ProcessedImageParams): Promise<void> {
-    const { image_id: id, file_path, mime_type } = data;
-    
-    const processedExist = await prisma.processedImage.findUnique({
-      where: { id }
-    });
-
-    if(processedExist){
-      throw new NotFoundError('Processed image already exists');
-    }
+  async save(data:ProcessedImageParams[]): Promise<void> {
    
-    await prisma.processedImage.create({
-      data: {
-        id,
-        file_path,
-        mime_type,
+    for(const files of data){
+      const { id, image_id, file_path, mime_type } = files;
+     
+      try {
+        await prisma.processedImage.create({
+          data: {
+            id,
+            image_id,
+            file_path,
+            mime_type,
+          }
+        });
+
+      } catch (error) {
+        throw new AppError(`Failed to send data to database: ${error}`, 500);
       }
-    });
+    }
+   
   }
 
-  async update(data:ProcessedReceiveParams):Promise<void>{
-    const {id, status, error_reason} = data; 
-   
-    const processedExist = await prisma.processedImage.findUnique({
-      where: { id }
-    });
+  async update(data: ProcessedReceiveParams[]):Promise<void>{
     
-    console.log(id);
-    if(processedExist){
-      await prisma.processedImage.update({
-        where:{ id },
-        data:{
-          status,
-          error_reason
+    const dataFormat = Array.isArray(data) ? data : [data];
+
+    for(const files of dataFormat){
+      const {id, status, error_reason} = files; 
+     
+      try{
+
+        if(await prisma.processedImage.findFirst({where:{ id }})){
+          await prisma.processedImage.update({ where:{ id },
+          data:{ status, error_reason}
+          });
         }
-      });
+
+      }catch(error){
+        throw new AppError(`Failed to send data to database: ${error}`, 500);
+      }
+
     }
 
   }
+    
 }

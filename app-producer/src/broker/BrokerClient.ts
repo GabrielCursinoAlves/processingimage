@@ -1,5 +1,5 @@
 import {AppError, NotFoundError} from "../lib/middlewares/AppErrorMiddleware.ts";
-import type { BrokerParams } from '../interface/BrokerParams.ts';
+import type { UploadParams } from '../interface/UploadParams.ts';
 import { ProcessedImage } from '../db/schema/ProcessedImage.ts';
 import * as amqp from 'amqplib';
 
@@ -55,6 +55,7 @@ export class BrokerClient {
           channel.ack(message);
               
         } catch (error) {
+          channel.nack(message);
           throw new AppError(`Error processing message: ${error}`,500);
         }
 
@@ -66,9 +67,8 @@ export class BrokerClient {
     
   } 
 
-  public async sendProcessImageRequest(data:BrokerParams):Promise<{image_id: string}>{
-    const { queueId, queueName, message } = data;
-  
+  public async sendProcessImageRequest(queueName: string, data: UploadParams[]):Promise<{image_id: string}>{
+    
     if(!queueName){
       throw new NotFoundError('Queue name must be defined');
     }
@@ -85,19 +85,30 @@ export class BrokerClient {
         }
       );
 
-      await channel.sendToQueue(
+      for(const files of data){
+
+        const { id, image_id, file_path, mime_type, original_filename } = files;
+
+        await channel.sendToQueue(
         queueName, 
-        Buffer.from(JSON.stringify(message)),
+        Buffer.from(JSON.stringify({
+          id,
+          image_id,
+          file_path,
+          mime_type,
+          original_filename
+        })),
         {
           persistent: true, 
-          correlationId: queueId
-        }
-      );
+          correlationId: image_id
+        });
 
+      }
+    
       return {
-        image_id: queueId
+        image_id: data[0].image_id
       };
-
+     
     } catch (error) {
       throw new AppError(`Failed to send message to queue: ${error}`, 500);
     }

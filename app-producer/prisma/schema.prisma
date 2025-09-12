@@ -8,7 +8,8 @@ datasource db {
 }
 
 model ProcessedImage {
-  id           String   @id @default(uuid())
+  id           String   @id
+  image_id     String
   file_path    String
   mime_type    String
   status       String   @default("pending")

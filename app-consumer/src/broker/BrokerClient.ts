@@ -94,6 +94,7 @@ export class BrokerClient {
 
     for(const file of contentFormat){
       await imageProcessingService.handle({
+        id: file.id,
         image_id: file.image_id,
         file_path: file.file_path,
         mime_type: file.mime_type
@@ -131,7 +132,7 @@ export class BrokerClient {
         const attemptsMax = 3;
 
         const content = JSON.parse(message.content.toString());
-       
+        
         try {
 
           this.processedPublish(content, {status: 'completed'}, channel);

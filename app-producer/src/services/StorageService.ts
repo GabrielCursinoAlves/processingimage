@@ -7,26 +7,36 @@ import fs from 'node:fs';
 
 export class StorageService{
   constructor(private __dirname = path.dirname(fileURLToPath(import.meta.url))) {}
-  async saveUploadedFile(file: MultipartFile): Promise<UploadParams> {
+  async saveUploadedFile(file: MultipartFile[]): Promise<UploadParams[]> {
     
-    const fileId = crypto.randomBytes(16).toString('hex'); 
-    const fileName = `${fileId}${path.extname(file.filename)}`;
+    let counter = 1;
+    const data: UploadParams[] = [];
 
+    const processedId = crypto.randomBytes(16).toString('hex'); 
     const fileDir = path.join(this.__dirname, '../../../uploads');
-    const fileUpload = path.join(this.__dirname, '../../../uploads', fileName);
 
-    if(!fs.existsSync(fileDir)) {
-      fs.mkdirSync(fileDir, { recursive: true });
+    for (const files of file){
+      const Id = crypto.randomBytes(16).toString('hex');
+      const fileName = `${processedId}_${counter}${path.extname(files.filename)}`;
+      const fileUpload = path.join(this.__dirname, '../../../uploads', fileName);
+     
+      if(!fs.existsSync(fileDir)) {
+        fs.mkdirSync(fileDir, { recursive: true });
+      }
+
+      await fs.promises.copyFile(files?.filepath, fileUpload);
+
+      data.push({
+        id: Id,
+        image_id: processedId, 
+        file_path: fileUpload,
+        mime_type: files.mimetype,
+        original_filename: files.filename
+      });
+      counter++;
     }
-   const buffer = await file.toBuffer();
-   await fs.writeFileSync(fileUpload, buffer);
 
-   return {
-      image_id: fileId, 
-      file_path: fileUpload,
-      mime_type: file.mimetype,
-      original_filename: file.filename,
-    };
-
+    return data;
+   
   }
 }

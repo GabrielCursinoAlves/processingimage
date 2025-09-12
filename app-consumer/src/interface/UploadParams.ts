@@ -1,4 +1,5 @@
 export interface UploadParams{
+  id?: string,
   image_id?: string,
   file_path: string,
   mime_type: string,

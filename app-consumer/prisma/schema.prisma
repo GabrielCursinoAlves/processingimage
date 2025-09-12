@@ -9,7 +9,8 @@ datasource db {
 
 model Processed_images {
   id                  String   @id @default(uuid())
-  image_processing_id String   @unique
+  processing_id       String
+  image_id            String
   processed_file_path String
   createdAt           DateTime @default(now())
 }
