@@ -1,5 +1,8 @@
+import {
+  PrismaUniqueViolationError,
+  PrismaRecordNotFoundError} from "../../lib/middlewares/PrismaErrorMiddleware.ts";
 import { ProcessedImageParams, ProcessedReceiveParams } from "../../interface/UploadParams.ts";
-import {AppError} from "../../lib/middlewares/AppErrorMiddleware.ts";
+import { AppError } from "../../lib/middlewares/AppErrorMiddleware.ts";
 import { prisma } from "../../config/prisma/connection.ts";
 
 export class ProcessedImage {
@@ -19,7 +22,9 @@ export class ProcessedImage {
         });
 
       } catch (error) {
-        throw new AppError(`Failed to send data to database: ${error}`, 500);
+        if(error instanceof PrismaUniqueViolationError && error.code == "P2002"){
+          throw new PrismaUniqueViolationError(`record does not exist in the database: ${error.message}`);
+        }
       }
     }
    
@@ -29,22 +34,23 @@ export class ProcessedImage {
     
     const dataFormat = Array.isArray(data) ? data : [data];
 
-    for(const files of dataFormat){
+    const updateFiles = dataFormat.map( async (files) => {
       const {id, status, error_reason} = files; 
-     
+
       try{
-
-        if(await prisma.processedImage.findFirst({where:{ id }})){
-          await prisma.processedImage.update({ where:{ id },
+        await prisma.processedImage.update({ where:{ id },
           data:{ status, error_reason}
-          });
-        }
-
+        });
+      
       }catch(error){
-        throw new AppError(`Failed to send data to database: ${error}`, 500);
+        if(error instanceof PrismaRecordNotFoundError && error.code == "P2025"){
+          throw new PrismaUniqueViolationError(`record does not exist in the database: ${error.message}`);
+        }
       }
 
-    }
+    });
+
+    Promise.all(updateFiles);
 
   }
     

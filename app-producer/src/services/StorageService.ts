@@ -24,7 +24,7 @@ export class StorageService{
         fs.mkdirSync(fileDir, { recursive: true });
       }
 
-      await fs.promises.copyFile(files?.filepath, fileUpload);
+      await fs.promises.copyFile(files.filepath, fileUpload);
 
       data.push({
         id: Id,
