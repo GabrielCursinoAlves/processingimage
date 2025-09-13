@@ -34,7 +34,7 @@ export class ProcessedImage {
     
     const dataFormat = Array.isArray(data) ? data : [data];
 
-    const updateFiles = dataFormat.map( async (files) => {
+    for(const files of dataFormat){
       const {id, status, error_reason} = files; 
 
       try{
@@ -48,9 +48,7 @@ export class ProcessedImage {
         }
       }
 
-    });
-
-    Promise.all(updateFiles);
+    }
 
   }
     
