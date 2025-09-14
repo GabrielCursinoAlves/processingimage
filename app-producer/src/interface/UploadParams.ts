@@ -6,6 +6,12 @@ export interface UploadParams{
   original_filename: string
 }
 
+export interface ReturnProducer{
+  message: string,
+  image_id: string,
+  count: number
+}
+
 export interface ProcessedImageParams{
   id: string
   image_id: string,

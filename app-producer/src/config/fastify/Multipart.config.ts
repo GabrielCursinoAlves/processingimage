@@ -4,8 +4,8 @@ const MultipartConfig = {
     headerPairs: 2000, 
     fieldSize: 100,    
     parts: 1000,         
-    fields: 100,        
-    files: 100           
+    fields: 0,        
+    files: 100,     
 }
 const AllTypesMultipart = [
     "image/png", 

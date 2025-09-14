@@ -1,24 +1,27 @@
-import { NotFoundError } from "../lib/middlewares/AppErrorMiddleware";
 import {ProcessedImages} from "../db/schema/ProcessedImages";
 import { UploadParams } from "../interface/UploadParams";
+import { AppError } from "../lib/middlewares/AppErrorMiddleware";
 import { SharpService } from "./SharpService";
 
 export class ImageProcessingService{
   constructor(private sharpService: SharpService = new SharpService()){}
   async handle(data:UploadParams):Promise<void>{
-   
     const result = await this.sharpService.handle(data);
-   
-    const {image_processing_id, processed_file_path} = result;
+  
+    const {id, processing_id, processed_file_path} = result;
 
-    /*if(!image_processing_id){
-       throw new NotFoundError("processed image id not defined");
+    try {
+      const processedImages = new ProcessedImages();
+      await processedImages.save({
+        id,
+        processing_id, 
+        processed_file_path
+      });
+
+    } catch (error) {
+      if(error instanceof AppError && error.statusCode == 500){
+        throw new AppError(`Database query failed: ${error.message}`, 500);
+      }
     }
-
-    const processedImages = new ProcessedImages();
-    await processedImages.save({
-      image_processing_id, 
-      processed_file_path
-    });*/
   }
 }

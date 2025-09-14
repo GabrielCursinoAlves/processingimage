@@ -158,7 +158,9 @@ export class BrokerClient {
       },{ noAck: false });
      
     } catch (error) {
-       throw new AppError(`Failed to send message to queue: ${error}`, 500);
+       if(error instanceof AppError && error.statusCode == 500){
+         throw new AppError(`Failed to send message to queue: ${error.message}`, 500);
+       }
     }
   }
   

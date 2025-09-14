@@ -8,8 +8,13 @@ import path from 'path';
 export class SharpService {
   constructor(private fileHandler = new FileHandler()) {}
   async handle(data: UploadParams):Promise<ProcessedsImages> {
-    const {id, image_id, file_path, mime_type} = data;
-    if(!image_id){
+    const {id, image_id: processing_id, file_path, mime_type} = data;
+    
+    if(!id){
+      throw new NotFoundError("id image not defined");
+    }
+    
+    if(!processing_id){
       throw new NotFoundError("processed image id not defined");
     }
 
@@ -36,7 +41,8 @@ export class SharpService {
       .toFile(processed_file_path);
       
       return {
-        image_processing_id: image_id,
+        id,
+        processing_id,
         processed_file_path
       }
 

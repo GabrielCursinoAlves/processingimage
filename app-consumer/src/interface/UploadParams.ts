@@ -7,7 +7,8 @@ export interface UploadParams{
 }
 
 export interface ProcessedsImages{
-  image_processing_id: string,
+  id: string,
+  processing_id: string,
   processed_file_path: string
 }
 

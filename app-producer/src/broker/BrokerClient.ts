@@ -1,5 +1,5 @@
 import {AppError, NotFoundError} from "../lib/middlewares/AppErrorMiddleware.ts";
-import type { UploadParams } from '../interface/UploadParams.ts';
+import type { ReturnProducer, UploadParams } from '../interface/UploadParams.ts';
 import { ProcessedImage } from '../db/schema/ProcessedImage.ts';
 import * as amqp from 'amqplib';
 
@@ -67,7 +67,7 @@ export class BrokerClient {
     
   } 
 
-  public async sendProcessImageRequest(queueName: string, data: UploadParams[]):Promise<{image_id: string}>{
+  public async sendProcessImageRequest(queueName: string, data: UploadParams[]):Promise<ReturnProducer>{
     
     if(!queueName){
       throw new NotFoundError('Queue name must be defined');
@@ -89,7 +89,7 @@ export class BrokerClient {
 
         const { id, image_id, file_path, mime_type, original_filename } = files;
 
-        await channel.sendToQueue(
+        channel.sendToQueue(
         queueName, 
         Buffer.from(JSON.stringify({
           id,
@@ -106,7 +106,9 @@ export class BrokerClient {
       }
     
       return {
-        image_id: data[0].image_id
+        message: "Message produced",
+        image_id: data[0].image_id,
+        count: data.length
       };
      
     } catch (error) {
