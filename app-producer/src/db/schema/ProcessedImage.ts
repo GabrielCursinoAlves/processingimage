@@ -1,8 +1,7 @@
+import { ProcessedImageParams, ProcessedReceiveParams } from "../../interface/UploadParams.ts";
 import {
   PrismaUniqueViolationError,
   PrismaRecordNotFoundError} from "../../lib/middlewares/PrismaErrorMiddleware.ts";
-import { ProcessedImageParams, ProcessedReceiveParams } from "../../interface/UploadParams.ts";
-import { AppError } from "../../lib/middlewares/AppErrorMiddleware.ts";
 import { prisma } from "../../config/prisma/connection.ts";
 
 export class ProcessedImage {
@@ -31,7 +30,6 @@ export class ProcessedImage {
   }
 
   async update(data: ProcessedReceiveParams[]):Promise<void>{
-    
     const dataFormat = Array.isArray(data) ? data : [data];
 
     for(const files of dataFormat){
@@ -39,7 +37,7 @@ export class ProcessedImage {
 
       try{
         await prisma.processedImage.update({ where:{ id },
-          data:{ status, error_reason}
+          data:{ status, error_reason }
         });
       
       }catch(error){
