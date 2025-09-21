@@ -1,10 +1,8 @@
-import {ProcessedPublishParams, ProcessedConfirmParams, UploadParams} from "../interface/UploadParams.ts";
 import {ExchangeRetryParams, AssertQueueRetryParams} from "../interface/BrokerParams.ts";
+import {ProcessedPublishParams, UploadParams} from "../interface/UploadParams.ts";
 import {AppError,NotFoundError} from "../lib/middlewares/AppErrorMiddleware.ts";
 import { ImageProcessingService } from "../services/ImageProcessingService.ts";
 import * as amqp from 'amqplib';
-import { error } from "console";
-import { channel } from "diagnostics_channel";
 
 export class BrokerClient {
   private static instance: BrokerClient;
@@ -75,7 +73,7 @@ export class BrokerClient {
       });
   }
 
-  private processedPublish(data:ProcessedPublishParams, confirm: ProcessedConfirmParams, channel:Channel):void{
+  private processedPublish(data:ProcessedPublishParams, channel:Channel):void{
     const contentFormat = Array.isArray(data) ? data : [data];
 
     for(const file of contentFormat){
@@ -83,8 +81,8 @@ export class BrokerClient {
       JSON.stringify({
         id: file.id, 
         image_id: file.image_id, 
-        status: confirm.status, 
-        error_reason: confirm.error_reason}
+        status: file.status, 
+        error_reason: file.error_reason}
       )));
     }
   }
@@ -134,8 +132,8 @@ export class BrokerClient {
         const content = JSON.parse(message.content.toString());
         
         try {
-
-          this.processedPublish(content, {status: 'completed'}, channel);
+          
+          this.processedPublish({...content, status:'completed' }, channel);
           await this.processedImages(imageProcessingService,content);
 
           channel.ack(message);
@@ -144,8 +142,8 @@ export class BrokerClient {
          
           if(attemptsxDeath.length < attemptsMax - 1){
             
-            if (error instanceof AppError) {
-              this.processedPublish(content, {status: 'failed', error_reason: error.message}, channel);
+            if (error instanceof AppError) { 
+              this.processedPublish({...content, status:'failed', error_reason: error.message }, channel);
             }
             channel.nack(message, false, false);
 

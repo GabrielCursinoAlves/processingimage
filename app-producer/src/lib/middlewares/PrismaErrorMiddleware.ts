@@ -1,4 +1,4 @@
-import { Prisma } from "@prisma/client"
+import { Prisma } from "@prisma/client";
 
 export class PrismaUniqueViolationError extends Prisma.PrismaClientKnownRequestError{
   constructor(message: string) {

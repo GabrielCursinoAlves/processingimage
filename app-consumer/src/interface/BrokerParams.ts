@@ -4,8 +4,8 @@ export interface ExchangeRetryParams{
 }
 
 export interface AssertQueueRetryParams{
-  retryQueueName: string,
-  exchangeName: string,
   queueName: string,
+  exchangeName: string,
+  retryQueueName: string,
   connectionChannel: Channel,
 }

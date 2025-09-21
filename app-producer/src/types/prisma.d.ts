@@ -1,0 +1,1 @@
+type PrismaClientTransaction = import("@prisma/client").Prisma.TransactionClient;

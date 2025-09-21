@@ -1,23 +1,20 @@
-export interface UploadParams{
-  id?: string,
-  image_id?: string,
+interface BaseParams{
+  id: string,
+  image_id: string,
+}
+
+export interface UploadParams extends BaseParams{
   file_path: string,
   mime_type: string,
-  original_filename?: string
+}
+
+export interface ProcessedPublishParams extends BaseParams{
+  error_reason?: string
+  status: 'completed' | 'failed',
 }
 
 export interface ProcessedsImages{
   id: string,
   processing_id: string,
   processed_file_path: string
-}
-
-export interface ProcessedPublishParams{
-  id: string,
-  image_id: string
-}
-
-export interface ProcessedConfirmParams{
-  status: 'completed' | 'failed',
-  error_reason?: string
 }

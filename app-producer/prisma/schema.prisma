@@ -16,3 +16,10 @@ model ProcessedImage {
   error_reason String?
   createdAt    DateTime @default(now())
 }
+
+model Outbox {
+  id        String   @id @default(uuid())
+  payload   Json
+  sent      Boolean  @default(false)
+  createdAt DateTime @default(now())
+}

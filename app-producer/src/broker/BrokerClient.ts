@@ -1,6 +1,6 @@
 import {AppError, NotFoundError} from "../lib/middlewares/AppErrorMiddleware.ts";
 import type { ReturnProducer, UploadParams } from '../interface/UploadParams.ts';
-import { ProcessedImage } from '../db/schema/ProcessedImage.ts';
+import {Schemas} from "../db/schema/index.ts";
 import * as amqp from 'amqplib';
 
 export class BrokerClient {
@@ -49,8 +49,7 @@ export class BrokerClient {
 
         try {    
           const content = JSON.parse(message.content.toString());
-          const processedImage = new ProcessedImage();
-          await processedImage.update(content);
+          await new Schemas.ProcessedImage().update(content);
 
           channel.ack(message);
               

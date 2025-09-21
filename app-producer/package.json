@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "dev": "npx tsx --env-file=.env --watch --no-warnings src/server.ts"
+    "dev": "npx tsx --env-file=.env --watch --no-warnings src/server.ts",
+    "start": "tsx src/relayer/RelayerClient.ts"
   },
   "keywords": [],
   "author": "",
@@ -15,7 +16,9 @@
     "amqplib": "^0.10.8",
     "fastify": "^5.5.0",
     "fastify-type-provider-zod": "^5.0.2",
+    "pm2": "^6.0.11",
     "prisma": "^6.15.0",
+    "tsx": "^4.20.5",
     "zod": "^4.0.5"
   },
   "devDependencies": {
@@ -24,7 +27,6 @@
     "@types/amqplib": "^0.10.6",
     "@types/node": "^24.0.15",
     "ts-node": "^10.9.2",
-    "tsx": "^4.20.3",
     "typescript": "^5.8.3"
   }
 }

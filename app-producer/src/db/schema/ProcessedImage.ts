@@ -1,17 +1,15 @@
+import { PrismaUniqueViolationError, PrismaRecordNotFoundError} from "../../lib/middlewares/PrismaErrorMiddleware.ts";
 import { ProcessedImageParams, ProcessedReceiveParams } from "../../interface/UploadParams.ts";
-import {
-  PrismaUniqueViolationError,
-  PrismaRecordNotFoundError} from "../../lib/middlewares/PrismaErrorMiddleware.ts";
 import { prisma } from "../../config/prisma/connection.ts";
 
-export class ProcessedImage {
-  async save(data:ProcessedImageParams[]): Promise<void> {
+export default class ProcessedImage {
+  async save(data:ProcessedImageParams[],tsxprisma:PrismaClientTransaction): Promise<void> {
    
     for(const files of data){
       const { id, image_id, file_path, mime_type } = files;
      
       try {
-        await prisma.processedImage.create({
+        await tsxprisma.processedImage.create({
           data: {
             id,
             image_id,
