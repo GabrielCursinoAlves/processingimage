@@ -5,11 +5,7 @@ import { UploadParams } from "../interface/UploadParams.ts";
 
 async function RelayerClient(){
   try {
-    console.log("Checking for unsent messages...");
-    const messages = await prisma.outbox.findMany({
-      where:{
-        sent: false
-      },
+    const messages = await prisma.outbox.findMany({where:{ sent: false },
       take: 50
     });
 
@@ -43,6 +39,7 @@ async function RelayerClient(){
 }
 
 async function RunRelayer() {
+  
   while (true) {
     
     try {
@@ -53,6 +50,7 @@ async function RunRelayer() {
    
     await new Promise(res => setTimeout(res, 5000));
   }
+  
 }
 
 RunRelayer();

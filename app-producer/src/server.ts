@@ -8,16 +8,8 @@ from 'fastify-type-provider-zod';
 import {ErrorHandler} from "./ErrorHandler.ts";
 
 import { CreateProcessingImageRouter } from './routers/CreateProcessingImageRouter.ts';
-import { BrokerClient } from "./broker/BrokerClient.ts";
 
 const app = fastify().withTypeProvider<ZodTypeProvider>();
-
-async function bootstrap(){
-  const broker = BrokerClient.getInstance();
-  await broker.processedReceiveQueue("producer_callback_queue");
-}
-
-bootstrap();
 
 app.setValidatorCompiler(validatorCompiler);
 app.setSerializerCompiler(serializerCompiler);
