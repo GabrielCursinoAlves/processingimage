@@ -3,9 +3,10 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
-  "type": "module",
   "scripts": {
-    "dev": "npx tsx --env-file=.env --watch --no-warnings src/server.ts"
+    "dev": "npx tsx --env-file=.env --watch --no-warnings src/server.ts",
+    "pm2-start": "npx pm2 start ecosystem.config.js",
+    "prisma-studio": "npx prisma studio"
   },
   "keywords": [],
   "author": "",
@@ -13,6 +14,7 @@
   "dependencies": {
     "amqplib": "^0.10.8",
     "fastify": "^5.5.0",
+    "pm2": "^6.0.13",
     "prisma": "^6.15.0",
     "sharp": "^0.34.3",
     "typescript": "^5.9.2"

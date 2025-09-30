@@ -8,14 +8,12 @@ async function ProducerQueueListener(){
 async function RunProducerQueue() {
   
   while (true) {
-    
     try {
       await ProducerQueueListener();
     } catch (error) {
       console.error("Erreur dans ProducerQueueListener: ", error);
     }
-   
-    await new Promise(res => setTimeout(res, 5100));
+    await new Promise(res => setTimeout(res, 5000));
   }
   
 }

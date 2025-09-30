@@ -3,14 +3,14 @@ import {
   UnsupportedMediaTypeError} 
 from "../middlewares/AppErrorMiddleware.ts";
 import {AllTypesMultipart} from "../../config/filesystem/FileSystem.config.ts";
-import { UploadParams } from "../../interface/UploadParams.ts";
+import { UploadValidate } from "../../interface/UploadParams.ts";
 import { fileURLToPath } from 'url';
 import path from 'path';
 import fs from 'fs';
 
 export class FileHandler{
   constructor(private __dirname = path.dirname(fileURLToPath(import.meta.url))) {}
-  validateFile(data:UploadParams):boolean {
+  validateFile(data:UploadValidate):boolean {
     const {file_path, mime_type} = data;
    
     const fileName = path.join(file_path);

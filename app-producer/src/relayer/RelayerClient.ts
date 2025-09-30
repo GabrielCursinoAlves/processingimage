@@ -41,13 +41,11 @@ async function RelayerClient(){
 async function RunRelayer() {
   
   while (true) {
-    
     try {
       await RelayerClient();
     } catch (error) {
       console.error("Erreur dans RelayerClient: ", error);
     }
-   
     await new Promise(res => setTimeout(res, 5000));
   }
   

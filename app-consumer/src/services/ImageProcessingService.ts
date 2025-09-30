@@ -1,7 +1,7 @@
-import {ProcessedImages} from "../db/schema/ProcessedImages";
-import { UploadParams } from "../interface/UploadParams";
-import { AppError } from "../lib/middlewares/AppErrorMiddleware";
-import { SharpService } from "./SharpService";
+import { AppError } from "../lib/middlewares/AppErrorMiddleware.ts";
+import {ProcessedImages} from "../db/schema/ProcessedImages.ts";
+import { UploadParams } from "../interface/UploadParams.ts";
+import { SharpService } from "./SharpService.ts";
 
 export class ImageProcessingService{
   constructor(private sharpService: SharpService = new SharpService()){}

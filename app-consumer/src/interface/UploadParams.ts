@@ -3,11 +3,18 @@ interface BaseParams{
   image_id: string,
 }
 
-export interface UploadParams extends BaseParams{
+interface Validate{
   file_path: string,
   mime_type: string,
 }
 
+export interface UploadValidate extends Validate{}
+
+export interface UploadParams extends BaseParams{
+  file_path: string,
+  mime_type: string,
+}
+ 
 export interface ProcessedPublishParams extends BaseParams{
   error_reason?: string
   status: 'completed' | 'failed',
