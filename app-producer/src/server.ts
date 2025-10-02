@@ -1,18 +1,8 @@
-import {fastify} from "fastify";
-import { 
-  serializerCompiler, 
-  validatorCompiler,
-  type ZodTypeProvider
-}
-from 'fastify-type-provider-zod';  
-import {ErrorHandler} from "./ErrorHandler.ts";
-
 import { CreateProcessingImageRouter } from './routers/CreateProcessingImageRouter.ts';
+import {ErrorHandler} from "./ErrorHandler.ts";
+import {fastify} from "fastify";
 
-const app = fastify().withTypeProvider<ZodTypeProvider>();
-
-app.setValidatorCompiler(validatorCompiler);
-app.setSerializerCompiler(serializerCompiler);
+const app = fastify();
 
 app.register(CreateProcessingImageRouter);
 
