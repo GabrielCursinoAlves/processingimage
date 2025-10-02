@@ -57,8 +57,9 @@ Você precisa ter instalado e configurado em sua máquina:
 
 1.  **Clone o Repositório:**
     ```bash
-    git clone [LINK DO SEU REPOSITÓRIO]
-    cd [NOME DA PASTA]
+    git clone https://github.com/GabrielCursinoAlves/processingimage.git
+    cd app-producer
+    cd app-consumer
     ```
 
 2.  **Instale as Dependências:**
